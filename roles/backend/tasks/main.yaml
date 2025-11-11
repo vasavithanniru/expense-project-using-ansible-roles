@@ -16,23 +16,32 @@
   ansible.builtin.user:
     name: expense
 
-- name: create app dir
-  ansible.builtin.file:
-    path: /app
-    state: directory
+# - name: create app dir
+#   ansible.builtin.file:
+#     path: /app
+#     state: directory
 
-- name: download the backend code
-  ansible.builtin.get_url:
-    url: https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
-    dest: /tmp/backend.zip 
+# - name: download the backend code
+#   ansible.builtin.get_url:
+#     url: https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
+#     dest: /tmp/backend.zip 
 
-- name: unzip the backend code
-  ansible.builtin.unarchive:
-    src: /tmp/backend.zip  #by default ansible thinks it is in ansible server, so we need to specify remote_src
-    dest: /app
-    remote_src: yes
+# - name: unzip the backend code
+#   ansible.builtin.unarchive:
+#     src: /tmp/backend.zip  #by default ansible thinks it is in ansible server, so we need to specify remote_src
+#     dest: /app
+#     remote_src: yes
+
+- name: import tasks from common role
+  tags:
+  - deployment
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-pre-req
     
 - name: Install dependencies
+  tags:
+  - deployment
   ansible.builtin.command: npm install
   args: 
     chdir: /app  
@@ -59,6 +68,8 @@
     target: /app/schema/backend.sql
 
 - name: reload the service
+  tags:
+  - deployment
   ansible.builtin.systemd_service:
     name: backend
     state: restarted
